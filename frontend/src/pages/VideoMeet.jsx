@@ -12,6 +12,7 @@ import MicOffIcon from "@mui/icons-material/MicOff";
 import StopScreenShareIcon from "@mui/icons-material/StopScreenShare";
 import ChatIcon from "@mui/icons-material/Chat";
 import styles from "../styles/video.module.css";
+import { useNavigate } from "react-router-dom";
 
 const server_url = "http://localhost:8000";
 
@@ -37,7 +38,9 @@ export default function VideoMeet() {
 
   let [screen, setScreen] = useState();
 
-  let [showModel, setShowModel] = useState();
+  let [showModal, setShowModal] = useState();
+
+  let [modal, setModal] = useState();
 
   let [screenAvailable, setScreenAvailable] = useState();
 
@@ -198,7 +201,16 @@ export default function VideoMeet() {
     }
   };
 
-  let addMessage = () => {};
+  let addMessage = (data, sender, socketIdSender) => {
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { sender: sender, data: data },
+    ]);
+
+    if (socketIdSender !== socketIdRef.current) {
+      setNewMessages((prevMessages) => prevMessages + 1);
+    }
+  };
   let connectToSocketServer = () => {
     socketRef.current = io.connect(server_url, { secure: false });
 
@@ -321,6 +333,8 @@ export default function VideoMeet() {
     };
   };
 
+  let routeTo = useNavigate();
+
   let getMedia = () => {
     setVideo(videoAvailable);
     setAudio(audioAvailable);
@@ -335,7 +349,21 @@ export default function VideoMeet() {
     setAudio(!audio);
   };
 
-  let sendMessages = () => {};
+  let sendMessages = () => {
+    socketRef.current.emit("chat-message", message, username);
+    setMessage("");
+  };
+
+  let handleEndCall = () => {
+    try {
+      let tracks = localVideo.current.srcObject.getTracks();
+      tracks.forEach((track) => track.stop());
+    } catch (error) {
+      console.error(error);
+    }
+
+    routeTo("/home");
+  };
 
   let getDisplayMediaSuccess = (stream) => {
     try {
@@ -410,19 +438,37 @@ export default function VideoMeet() {
         </div>
       ) : (
         <div className={styles.meetVideoContainer}>
-          {showModel ? (
+          {showModal ? (
             <div className={styles.chatRoom}>
               <div className={styles.chatContainer}>
                 <h1>Chat</h1>
+
+                <div className={styles.chattingDisplay}>
+                  {messages.length > 0 ? (
+                    messages.map((item, index) => {
+                      return (
+                        <div style={{ marginBottom: "20px" }} key={index}>
+                          <p style={{ fontWeight: "bold" }}>{item.sender}</p>
+                          <p>{item.data}</p>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p>No Messages Yet</p>
+                  )}
+                </div>
+
                 <div className={styles.chattingArea}>
-                <TextField
-                  id="outlined-basic"
-                  label="Enter Message"
-                  variant="outlined"
-                />
-                <Button variant="contained" onClick={sendMessages}>
-                  Send
-                </Button>
+                  <TextField
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    id="outlined-basic"
+                    label="Enter Message"
+                    variant="outlined"
+                  />
+                  <Button variant="contained" onClick={sendMessages}>
+                    Send
+                  </Button>
                 </div>
               </div>
             </div>
@@ -434,7 +480,7 @@ export default function VideoMeet() {
             <IconButton onClick={handleVideo} style={{ color: "white" }}>
               {video === true ? <VideocamIcon /> : <VideocamOffIcon />}
             </IconButton>
-            <IconButton style={{ color: "red" }}>
+            <IconButton onClick={handleEndCall} style={{ color: "red" }}>
               <CallEndIcon />
             </IconButton>
             <IconButton onClick={handleAudio} style={{ color: "white" }}>
@@ -455,7 +501,7 @@ export default function VideoMeet() {
 
             <Badge badgeContent={newMessages} color="secondary" max={999}>
               <IconButton
-                onClick={() => setShowModel(!setModel)}
+                onClick={() => setModal(!showModal)}
                 style={{ color: "white" }}
               >
                 <ChatIcon />
