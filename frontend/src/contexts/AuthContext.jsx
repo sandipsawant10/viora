@@ -17,54 +17,55 @@ export const AuthProvider = ({ children }) => {
   const router = useNavigate();
 
   const handleRegister = async (name, username, password) => {
-    try {
-      let request = await client.post("/register", {
-        name: name,
-        username: username,
-        password: password,
-      });
+    let request = await client.post("/register", {
+      name: name,
+      username: username,
+      password: password,
+    });
 
-      if (request.status === httpStatus.CREATED) {
-        return request.data.message;
-      }
-    } catch (error) {
-      throw error;
+    if (request.status === httpStatus.CREATED) {
+      return request.data.message;
     }
   };
 
   const handleLogin = async (username, password) => {
-    try {
-      let request = await client.post("/login", {
-        username: username,
-        password: password,
-      });
+    let request = await client.post("/login", {
+      username: username,
+      password: password,
+    });
 
-      console.log(username, password);
-      console.log(request.data);
+    console.log(username, password);
+    console.log(request.data);
 
-      if (request.status === httpStatus.OK) {
-        localStorage.setItem("token", request.data.token);
-        router("/home");
-      }
-    } catch (error) {
-      throw error;
+    if (request.status === httpStatus.OK) {
+      localStorage.setItem("token", request.data.token);
+      router("/home");
     }
   };
 
   const getHistoryOfUser = async () => {
-    try {
-      let request = await client.get("/get_all_activity", {
-        params: {
-          token: localStorage.getItem("token"),
-        },
-      });
-      return request.data;
-    } catch (error) {
-      throw error;
-    }
+    let request = await client.get("/get_all_activity", {
+      params: {
+        token: localStorage.getItem("token"),
+      },
+    });
+    return request.data;
   };
 
-  const data = { handleRegister, handleLogin, getHistoryOfUser };
+  const addToUserHistory = async (meetingCode) => {
+    let request = await client.post("/add_to_history", {
+      token: localStorage.getItem("token"),
+      meeting_code: meetingCode,
+    });
+    return request;
+  };
+
+  const data = {
+    handleRegister,
+    handleLogin,
+    getHistoryOfUser,
+    addToUserHistory,
+  };
 
   return <AuthContext.Provider value={data}>{children}</AuthContext.Provider>;
 };
