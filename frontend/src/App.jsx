@@ -5,6 +5,7 @@ import Authentication from './pages/Authentication'
 import { AuthProvider } from './contexts/AuthContext'
 import VideoMeet from './pages/VideoMeet'
 import History from './pages/History'
+import Home from './pages/Home'   
 
 function App() {
   
@@ -21,6 +22,8 @@ function App() {
     <Route path='/' element={<Landing />}/>
 
     <Route path='/auth' element={<Authentication/>}/>
+
+    <Route path='/home' element={<Home/>}/>
 
     <Route path='/history' element={<History/>} />
 
