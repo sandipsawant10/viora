@@ -1,7 +1,7 @@
-let isProd = true;
+let isProd = false;
 
 const server = isProd
-  ? "http://localhost:8000"
-  : "https://viora-backend.onrender.com";
+  ? "https://viora-backend.onrender.com"
+  : "http://localhost:3000";
 
 export default server;

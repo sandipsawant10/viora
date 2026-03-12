@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
-import "../styles/video.css";
+import styles from "../styles/video.module.css";
 import { Badge, Button, TextField } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import VideocamIcon from "@mui/icons-material/Videocam";
@@ -11,7 +11,6 @@ import ScreenShareIcon from "@mui/icons-material/ScreenShare";
 import MicOffIcon from "@mui/icons-material/MicOff";
 import StopScreenShareIcon from "@mui/icons-material/StopScreenShare";
 import ChatIcon from "@mui/icons-material/Chat";
-import styles from "../styles/video.module.css";
 import { useNavigate } from "react-router-dom";
 import server from "../environment";
 
@@ -215,16 +214,14 @@ export default function VideoMeet() {
   let connectToSocketServer = () => {
     socketRef.current = io.connect(server_url, { secure: false });
 
-    socketIdRef.current.on("signal", gotMessageFromServer);
+    socketRef.current.on("signal", gotMessageFromServer);
 
-    socketIdRef.current.on("connect", () => {
+    socketRef.current.on("connect", () => {
       socketRef.current.emit("join-call", window.location.href);
 
-      socketIdRef.current = socketIdRef.current.id;
+      socketIdRef.current = socketRef.current.id;
 
       socketRef.current.on("chat-message", addMessage);
-
-      socketRef.current.on();
 
       socketRef.current.on("user-left", (id) => {
         setVideo((videos) => videos.filter((video) => video.socketId !== id));
@@ -286,31 +283,31 @@ export default function VideoMeet() {
             connections[socketListId].addStream(window.localStream);
           }
         });
-      });
 
-      if (id === socketIdRef.current) {
-        for (let id2 in connections) {
-          if (id2 === socketIdRef.current) continue;
+        if (id === socketIdRef.current) {
+          for (let id2 in connections) {
+            if (id2 === socketIdRef.current) continue;
 
-          try {
-            connections[id2].addStream(window.localStream);
-          } catch (e) {
-            console.log(e);
+            try {
+              connections[id2].addStream(window.localStream);
+            } catch (e) {
+              console.log(e);
+            }
+            connections[id2]
+              .createOffer()
+              .then((description) => {
+                connections[id2].setLocalDescription(description).then(() => {
+                  socketRef.current.emit(
+                    "signal",
+                    id2,
+                    JSON.stringify({ sdp: connections[id2].localDescription }),
+                  );
+                });
+              })
+              .catch((e) => console.log(e));
           }
-          connections[id2]
-            .createOffer()
-            .then((description) => {
-              connections[id2].setLocalDescription(description).then(() => {
-                socketRef.current.emit(
-                  "signal",
-                  id2,
-                  JSON.stringify({ sdp: connections[id2].localDescription }),
-                );
-              });
-            })
-            .catch((e) => console.log(e));
         }
-      }
+      });
     });
 
     let silence = () => {

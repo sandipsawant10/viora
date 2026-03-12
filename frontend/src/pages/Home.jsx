@@ -5,17 +5,17 @@ import "../App.css";
 import IconButton from "@mui/material/IconButton";
 import RestoreIcon from "@mui/icons-material/Restore";
 import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
 import { AuthContext } from "../contexts/AuthContext";
-
 
 export default function Home() {
   let navigate = useNavigate();
   const [meetingCode, setMeetingCode] = useState("");
 
-  const {addToUserHistory} = useContext(AuthContext);
+  const { addToUserHistory } = useContext(AuthContext);
   let handleJoinVideoCall = async () => {
     await addToUserHistory(meetingCode);
-    navigate(`${meetingCode}`);
+    navigate(`/${meetingCode}`);
   };
 
   return (
@@ -26,9 +26,7 @@ export default function Home() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center" }}>
-          <IconButton onClick={
-            navigate('/history')
-          }>
+          <IconButton onClick={() => navigate("/history")}>
             <RestoreIcon />
           </IconButton>
           <p>History</p>
